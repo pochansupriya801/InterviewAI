@@ -30,43 +30,66 @@ def use_demo_mode():
 
 BUILTIN_QUESTIONS = {
     "Python Developer": [
+        "What is the difference between a list and a tuple in Python?",
         "What are Python decorators and how do you use them?",
-        "Explain the difference between a list and a tuple in Python.",
-        "How does Python manage memory and garbage collection?",
+        "Explain Python generators and the yield keyword.",
         "What is the difference between deep copy and shallow copy?",
+        "How does Python manage memory and garbage collection?",
+        "What are context managers in Python?",
+        "Explain lambda functions in Python.",
+        "What is the difference between append() and extend()?",
     ],
     "Java Developer": [
         "What is the difference between == and equals() in Java?",
         "Explain multithreading and synchronization in Java.",
         "What are Java collections and when do you use ArrayList vs LinkedList?",
         "Explain JVM memory management and garbage collection.",
+        "What are checked vs unchecked exceptions?",
+        "What is dependency injection in Spring?",
+        "Explain the difference between interface and abstract class.",
+        "What is multithreading and how do you create a thread?",
     ],
     "Web Developer": [
         "Explain the difference between HTML, CSS, and JavaScript.",
         "What is responsive web design and how do you implement it?",
         "Explain REST APIs and HTTP methods.",
         "What is the Same-Origin Policy and CORS?",
+        "What is event delegation in JavaScript?",
+        "Explain the difference between GET and POST.",
+        "What is local storage and session storage?",
+        "How does browser rendering work?",
     ],
     "Data Analyst": [
         "What is the difference between mean, median, and mode?",
         "How do you handle missing values in a dataset?",
         "Explain SQL joins with examples.",
         "What is data normalization?",
+        "How do you detect outliers in data?",
+        "Explain the bias-variance tradeoff.",
+        "What is A/B testing?",
+        "How do you use GROUP BY and HAVING in SQL?",
     ],
     "Frontend Developer": [
         "What is the virtual DOM?",
         "Explain CSS Flexbox and Grid differences.",
         "What are React hooks and why use them?",
         "How do you optimize frontend performance?",
+        "What is state management in React?",
+        "What is accessibility and how do you improve it?",
+        "Explain lazy loading and code splitting.",
+        "What is responsive design implementation?",
     ],
     "Backend Developer": [
         "What is REST and how do you design RESTful APIs?",
         "Explain authentication vs authorization.",
         "How do you scale a backend application?",
         "What is caching and when would you use Redis?",
+        "Explain database indexing.",
+        "What is rate limiting and how do you implement it?",
+        "What is a microservice architecture?",
+        "Explain JWT authentication.",
     ],
 }
-
 
 def demo_question(role, difficulty, number, total):
     bank = BUILTIN_QUESTIONS.get(role, BUILTIN_QUESTIONS["Web Developer"])
