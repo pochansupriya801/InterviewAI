@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Study Resources - InterviewAI{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include "sidebar.html" %}
+  <main class="main-content">
+    <header class="topbar">
+      <div class="greeting"><h2>Study Resources</h2><p>Curated topics to strengthen your interview skills.</p></div>
+    </header>
+    <section class="resource-grid">
+      <div class="card resource-card"><h3>Python OOP</h3><p>Classes, objects, inheritance, polymorphism.</p></div>
+      <div class="card resource-card"><h3>Data Structures & Algorithms</h3><p>Arrays, trees, graphs, complexity.</p></div>
+      <div class="card resource-card"><h3>Database Management</h3><p>SQL, normalization, transactions.</p></div>
+      <div class="card resource-card"><h3>System Design</h3><p>Scalability, caching, load balancing.</p></div>
+      <div class="card resource-card"><h3>Java Collections</h3><p>List, Set, Map and their implementations.</p></div>
+      <div class="card resource-card"><h3>Frontend Basics</h3><p>HTML, CSS, JavaScript, responsive design.</p></div>
+    </section>
+  </main>
+</div>
+{% endblock %}
