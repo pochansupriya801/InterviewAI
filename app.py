@@ -403,11 +403,14 @@ def build_question_prompt(role, difficulty, number, total, context):
 def generate_question_text(role, difficulty, number, total, context):
     if use_demo_mode():
         return demo_question(role, difficulty, number, total)
-    result = ai_json(build_question_prompt(role, difficulty, number, total, context), temperature=0.7)
-    question = (result.get("question") or "").strip()
-    if not question:
-        raise ValueError("AI did not return a question.")
-    return question
+    try:
+        result = ai_json(build_question_prompt(role, difficulty, number, total, context), temperature=0.7)
+        question = (result.get("question") or "").strip()
+        if not question:
+            raise ValueError("AI did not return a question.")
+        return question
+    except Exception:
+        return demo_question(role, difficulty, number, total)
 
 
 # ---------- interview API ----------
@@ -608,7 +611,7 @@ def api_submit_answer(interview_id):
             temperature=0.2,
         )
     except Exception as exc:
-        return jsonify({"error": str(exc), "retry": True}), 503
+        result = demo_evaluation(interview["role"], q["question_text"], answer_text)
 
     # validate fields
     try:
