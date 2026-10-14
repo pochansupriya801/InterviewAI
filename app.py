@@ -22,6 +22,89 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
+
+
+def use_demo_mode():
+    return DEMO_MODE or not OPENAI_API_KEY
+
+BUILTIN_QUESTIONS = {
+    "Python Developer": [
+        "What are Python decorators and how do you use them?",
+        "Explain the difference between a list and a tuple in Python.",
+        "How does Python manage memory and garbage collection?",
+        "What is the difference between deep copy and shallow copy?",
+    ],
+    "Java Developer": [
+        "What is the difference between == and equals() in Java?",
+        "Explain multithreading and synchronization in Java.",
+        "What are Java collections and when do you use ArrayList vs LinkedList?",
+        "Explain JVM memory management and garbage collection.",
+    ],
+    "Web Developer": [
+        "Explain the difference between HTML, CSS, and JavaScript.",
+        "What is responsive web design and how do you implement it?",
+        "Explain REST APIs and HTTP methods.",
+        "What is the Same-Origin Policy and CORS?",
+    ],
+    "Data Analyst": [
+        "What is the difference between mean, median, and mode?",
+        "How do you handle missing values in a dataset?",
+        "Explain SQL joins with examples.",
+        "What is data normalization?",
+    ],
+    "Frontend Developer": [
+        "What is the virtual DOM?",
+        "Explain CSS Flexbox and Grid differences.",
+        "What are React hooks and why use them?",
+        "How do you optimize frontend performance?",
+    ],
+    "Backend Developer": [
+        "What is REST and how do you design RESTful APIs?",
+        "Explain authentication vs authorization.",
+        "How do you scale a backend application?",
+        "What is caching and when would you use Redis?",
+    ],
+}
+
+
+def demo_question(role, difficulty, number, total):
+    bank = BUILTIN_QUESTIONS.get(role, BUILTIN_QUESTIONS["Web Developer"])
+    idx = (number - 1) % len(bank)
+    return bank[idx] + f" (Difficulty: {difficulty})"
+
+
+def demo_evaluation(role, question, answer):
+    length = len(answer.strip())
+    base = 40 + min(35, length // 10)
+    keyword_bonus = 10 if any(w in answer.lower() for w in ["because", "example", "use", "create", "function", "class"]) else 0
+    overall = min(95, base + keyword_bonus)
+    strengths = []
+    if length >= 60:
+        strengths.append("Detailed response")
+    if keyword_bonus:
+        strengths.append("Uses explanation and examples")
+    if not strengths:
+        strengths.append("Attempted to answer the question")
+    return {
+        "score": round(float(overall), 1),
+        "correctness": round(float(min(99, overall + 3)), 1),
+        "relevance": round(float(min(99, overall + 1)), 1),
+        "completeness": round(float(min(99, max(30, overall - 5))), 1),
+        "technical_accuracy": round(float(min(99, overall + 2)), 1),
+        "communication": round(float(min(99, overall + 1)), 1),
+        "strengths": strengths,
+        "improvements": [
+            "Add a concrete real-world example",
+            "Explain technical terms more clearly",
+            "Include edge cases and best practices",
+        ],
+        "feedback": "Offline demo mode: heuristic estimate only, not AI.",
+        "sample_answer": "A strong answer defines the concept, explains how it works, gives a practical example, and mentions pitfalls.",
+        "next_suggestion": "Focus on adding an example and explaining why your approach is correct.",
+        "demo": True,
+    }
+
 
 # Ensure the SQLite schema exists when running under gunicorn or Flask.
 db.init_db()
@@ -286,6 +369,8 @@ def build_question_prompt(role, difficulty, number, total, context):
 
 
 def generate_question_text(role, difficulty, number, total, context):
+    if use_demo_mode():
+        return demo_question(role, difficulty, number, total)
     result = ai_json(build_question_prompt(role, difficulty, number, total, context), temperature=0.7)
     question = (result.get("question") or "").strip()
     if not question:
@@ -350,6 +435,7 @@ def api_start_interview():
             "difficulty": difficulty,
             "total_questions": total_questions,
             "question": {"id": qid, "number": 1, "text": question_text},
+            "demo": use_demo_mode(),
         }
     )
 
@@ -437,6 +523,28 @@ def api_submit_answer(interview_id):
     uid = g.user["id"]
     if not rate_limit(f"eval:{uid}", limit=30, window=60):
         return jsonify({"error": "Too many evaluation requests. Please slow down."}), 429
+
+    if use_demo_mode():
+        result = demo_evaluation(interview["role"], q["question_text"], answer_text)
+        with db.db() as conn:
+            conn.execute(
+                "INSERT INTO answers (question_id, answer_text) VALUES (?, ?)",
+                (question_id, answer_text),
+            )
+            answer_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+            conn.execute(
+                """INSERT INTO evaluations
+                (answer_id, score, correctness, relevance, completeness, technical_accuracy,
+                 communication, strengths, improvements, feedback, sample_answer, next_suggestion)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    answer_id, result["score"], result["correctness"], result["relevance"],
+                    result["completeness"], result["technical_accuracy"], result["communication"],
+                    json.dumps(result["strengths"]), json.dumps(result["improvements"]),
+                    result["feedback"], result["sample_answer"], result["next_suggestion"],
+                ),
+            )
+        return jsonify({"evaluation": result})
 
     # evaluate with AI
     try:
@@ -866,6 +974,13 @@ def api_recommendations(interview_id):
                 suggested.append(t)
             if len(suggested) >= 5:
                 break
+
+    if use_demo_mode():
+        return jsonify({"topics": suggested, "plan": [
+            "Review one weak topic each day.",
+            "Re-attempt similar interview questions.",
+            "Practice explaining concepts out loud.",
+        ]})
 
     # try AI enrichment; fall back gracefully
     try:
