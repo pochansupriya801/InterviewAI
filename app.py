@@ -191,6 +191,12 @@ def profile_page():
     return render_template("profile.html")
 
 
+@app.route("/settings")
+@login_required
+def settings_page():
+    return render_template("profile.html")
+
+
 # ---------- auth API ----------
 
 @app.route("/api/register", methods=["POST"])

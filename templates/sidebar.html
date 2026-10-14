@@ -9,7 +9,7 @@
     <a href="/history" class="nav-item {{ 'active' if request.path.startswith('/history') else '' }}"><span>📜</span> My History</a>
     <a href="/resources" class="nav-item {{ 'active' if request.path.startswith('/resources') else '' }}"><span>📚</span> Study Resources</a>
     <a href="/profile" class="nav-item {{ 'active' if request.path.startswith('/profile') else '' }}"><span>👤</span> Profile</a>
-    <a href="#" class="nav-item" onclick="logoutUser(event)"><span>⚙️</span> Settings</a>
+    <a href="/settings" class="nav-item {{ 'active' if request.path.startswith('/settings') else '' }}"><span>⚙️</span> Settings</a>
   </nav>
   <div class="motivation-card">
     <div class="mot-icon">🚀</div>
