@@ -92,9 +92,13 @@ BUILTIN_QUESTIONS = {
 }
 
 def demo_question(role, difficulty, number, total):
+    if number == 1:
+        return f"Tell me about yourself and why you are interested in the {role} position. (Difficulty: {difficulty})"
     bank = BUILTIN_QUESTIONS.get(role, BUILTIN_QUESTIONS["Web Developer"])
-    idx = (number - 1) % len(bank)
-    return bank[idx] + f" (Difficulty: {difficulty})"
+    idx = (number - 1) % (len(bank) + 1)
+    if idx == 0:
+        idx = 1
+    return bank[idx - 1] + f" (Difficulty: {difficulty})"
 
 
 def demo_evaluation(role, question, answer):
@@ -374,7 +378,8 @@ def build_question_prompt(role, difficulty, number, total, context):
             "role": "system",
             "content": (
                 "You are a senior technical interviewer conducting a realistic mock interview. "
-                "Ask exactly ONE clear interview question. Return ONLY valid JSON with keys: "
+                "If this is question 1, first ask the candidate to introduce themselves and explain why they want the role. "
+                "Otherwise ask exactly ONE clear interview question. Return ONLY valid JSON with keys: "
                 '"question" (string) and "focus" (short topic label). '
                 "Make it appropriate for the role and difficulty. Avoid repeats."
             ),
@@ -388,6 +393,7 @@ def build_question_prompt(role, difficulty, number, total, context):
                     "question_number": number,
                     "total_questions": total,
                     "previous_context": context,
+                    "first_question_should_be_intro": number == 1,
                 }
             ),
         },
