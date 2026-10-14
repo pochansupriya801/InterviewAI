@@ -23,6 +23,9 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+# Ensure the SQLite schema exists when running under gunicorn or Flask.
+db.init_db()
+
 rate_buckets = defaultdict(deque)
 
 
