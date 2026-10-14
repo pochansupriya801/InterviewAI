@@ -119,6 +119,9 @@ def _openai_client():
         from openai import OpenAI
     except Exception as exc:  # pragma: no cover
         raise RuntimeError("OpenAI SDK is not installed.") from exc
+    base_url = os.getenv("OPENAI_BASE_URL")
+    if base_url:
+        return OpenAI(api_key=OPENAI_API_KEY, base_url=base_url)
     return OpenAI(api_key=OPENAI_API_KEY)
 
 
